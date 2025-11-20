@@ -28,8 +28,7 @@ Simple Java console app that connects to a MySQL database using JDBC and Prepare
 3. **Run**
     - Open the project in IntelliJ.
     - Ensure `lib/mysql-connector-j-*.jar` is **Add as Library…** (Project Library).
-    - Open `src/Main.java` and click the green arrow next to `main`.
-
+    - Open `src/Main.java` and click the green arrow next to `main`
 
 ## Notes
 - Keep credentials out of Git. Use `app.properties` locally (ignored by git).
