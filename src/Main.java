@@ -1,13 +1,27 @@
 import java.sql.*;
+import java.util.Properties;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 
 public class Main {
     public static void main(String[] args) {
-        String url = "jdbc:mysql://localhost:3306/danceCompetition";
-        String username = "root";
-        String password = "";
+//        check if app.properties works
+        Properties props = new Properties();
+        try (FileInputStream fis = new FileInputStream("app.properties")) {
+            props.load(fis);
+        } catch (IOException e) {
+            System.out.println("Error: could not load app.properties file.");
+            return;
+        }
+//      add your own credentials in app.properties and this as the url: jdbc:mysql://localhost:3306/danceCompetition;
+        String url = props.getProperty("url");
+        String username = props.getProperty("user");
+        String password = props.getProperty("password");
+
 
         try {
-            // Load driver (optional in modern Java but still fine)
+            // Load driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Connect
