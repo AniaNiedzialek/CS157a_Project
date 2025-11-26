@@ -308,7 +308,7 @@ private static void viewCompetitions(Connection conn) {
                 return;
             }
             String sql = "INSERT INTO Event (EventID, Date, Price, Address) VALUES (?, ?, ?, ?)";
-            PreparedStatement ps;
+            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, eventID);
             ps.setString(2, date);
             ps.setDouble(3, price);
