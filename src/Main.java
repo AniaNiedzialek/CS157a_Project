@@ -48,7 +48,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            System.out.println("*** WELCOME TO THE DANCE COMPETITION SYSTEM ***:");
+            System.out.println("\n*** WELCOME TO THE DANCE COMPETITION SYSTEM ***:");
             System.out.println("1. View Data");
             System.out.println("2. Insert Data");
             System.out.println("3. Update Data");
@@ -213,11 +213,117 @@ private static void viewCompetitions(Connection conn) {
     }
 
     private static void insertPerson(Connection conn, Scanner scanner) {
-        System.out.println("\n(Insert Person - will implement)");
+        System.out.println("\n*** INSERT PERSON *** ");
+
+        try {
+            System.out.println("*** Enter Person ID: *** ");
+            String idStr = scanner.nextLine();
+
+            int personID;
+            try {
+                personID = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid ID - must be a number...");
+                return;
+            }
+
+            System.out.println("Enter Name: ");
+            String name = scanner.nextLine();
+            if (name.isEmpty()) {
+                System.out.println("Cannot be empty");
+                return;
+            }
+
+            System.out.println("Enter Age: ");
+            String ageStr = scanner.nextLine();
+            int age;
+            try {
+                age = Integer.parseInt(ageStr);
+                if (age <= 0) {
+                    System.out.println("Age must be positive.");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid age. Must be a number.");
+                return;
+            }
+
+            String sql = "INSERT INTO Person (PersonID, Name, Age) VALUES (?, ?, ?)";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, personID);
+            ps.setString(2, name);
+            ps.setInt(3,age);
+            int rows = ps.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("Successfully inserted into person table.");
+            } else {
+                System.out.println("Failed to insert into person table.");
+            }
+            ps.close();
+
+        } catch (SQLException e) {
+            System.out.println("\nError inserting persons:");
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void insertEvent(Connection conn, Scanner scanner) {
-        System.out.println("\n(Insert Event - will implement)");
+        System.out.println("\n*** INSERT EVENTS *** ");
+
+        try {
+            System.out.println("Enter Event ID: ");
+            String idStr = scanner.nextLine();
+            int eventID;
+            try {
+                eventID = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid ID - must be a number...");
+                return;
+            }
+            System.out.println("Enter Date (YYYY-MM-DD): ");
+            String date = scanner.nextLine().trim();
+            if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                System.out.println("Invalid date format.");
+                return;
+            }
+
+            System.out.println("Enter Price (number): ");
+            String priceStr = scanner.nextLine();
+            double price;
+            try {
+                price = Double.parseDouble(priceStr);
+                if (price <= 0) {System.out.println("Price must be positive.");
+                    return;
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid price format.");
+                return ;
+            }
+            System.out.println("Enter Address: ");
+            String address = scanner.nextLine();
+            if (address.isEmpty()) {
+                System.out.println("Address cannot be empty...");
+                return;
+            }
+            String sql = "INSERT INTO Event (EventID, Date, Price, Address) VALUES (?, ?, ?, ?)";
+            PreparedStatement ps;
+            ps.setInt(1, eventID);
+            ps.setString(2, date);
+            ps.setDouble(3, price);
+            ps.setString(4, address);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Successfully inserted into event table.");
+
+            } else {
+                System.out.println("Failed to insert into event table.");
+            }
+            ps.close();
+            } catch (SQLException e) {
+            System.out.println("\nError inserting event: " + e.getMessage());
+        }
     }
 
     private static void updatePersonAge(Connection conn, Scanner scanner) {
