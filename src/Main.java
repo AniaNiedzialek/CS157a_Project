@@ -151,13 +151,13 @@ private static void updateMenu(Connection conn, Scanner scanner) {
 
 private static void deleteMenu(Connection conn, Scanner scanner) {
     System.out.println("*** DELETE DATA *** ");
-    System.out.println("1. Delete Person");
+    System.out.println("1. Delete Event");
     System.out.println("2. Back");
 
     String c = scanner.nextLine();
     switch (c) {
         case "1":
-            deletePerson(conn, scanner);
+            deleteEvent(conn, scanner);
             break;
         case "2":
             return;
@@ -327,46 +327,84 @@ private static void viewCompetitions(Connection conn) {
     }
 
     private static void updatePersonAge(Connection conn, Scanner scanner) {
-        System.out.println("\n(Update Person Age - will implement)");
+        System.out.println("\n*** UPDATE PERSON AGE *** ");
+        try {
+            System.out.println("Enter Person ID to update: ");
+            String idStr = scanner.nextLine();
+
+            int personID;
+            try {
+                personID = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid ID - must be a number...");
+                return;
+            }
+            System.out.println("Enter Age to update: ");
+            String ageStr = scanner.nextLine();
+            int newAge;
+            try {
+                newAge = Integer.parseInt(ageStr);
+                if (newAge <= 0) {
+                    System.out.println("Age must be positive.");
+                    return;
+                }
+            }
+            catch (NumberFormatException e) {
+                System.out.println("Invalid age format.");
+                return;
+            }
+
+            String sql = "UPDATE Person SET Age = ? WHERE PersonID = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, newAge);
+            ps.setInt(2, personID);
+
+            int rows = ps.executeUpdate();
+            ps.close();
+
+            if(rows == 0) {
+                System.out.println("SNo person found with ID: " + personID);
+            } else {
+                System.out.println("Age updated!");
+            }
+
+
+        } catch (SQLException e) {
+            System.out.println("\nERROR updating person: " + e.getMessage());
+        }
     }
 
-    private static void deletePerson(Connection conn, Scanner scanner) {
-        System.out.println("\n(Delete Person - will implement)");
+    private static void deleteEvent(Connection conn, Scanner scanner) {
+        System.out.println("\n*** DELETE EVENTS *** ");
+
+        try {
+            System.out.println("Enter Event ID to delete: ");
+            String idStr = scanner.nextLine();
+            int eventID;
+            try {
+                eventID = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid ID - must be a number...");
+                return;
+            }
+            String sql = "DELETE FROM Event WHERE EventID = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, eventID);
+            int rows = ps.executeUpdate();
+            ps.close();
+            if (rows == 0){
+                System.out.println("No event found with ID: " + eventID);
+            } else {
+                System.out.println("Event deleted!");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("\nERROR deleting event: " + e.getMessage());
+        }
+
     }
 
     private static void transactionWorkflow(Connection conn, Scanner scanner) {
         System.out.println("\n(Transaction Workflow - will implement)");
     }
 }
-
-
-
-
-
-            // Test query
-//            String sql = "SELECT CompetitionID, Rounds, BallroomNumber FROM Competition LIMIT 3";
-//            PreparedStatement ps = conn.prepareStatement(sql);
-//            ResultSet rs = ps.executeQuery();
-//
-//            System.out.println("CompetitionID | Rounds | Ballroom");
-//            while (rs.next()) {
-//                System.out.printf("%13d | %6d | %9d%n",
-//                        rs.getInt("CompetitionID"),
-//                        rs.getInt("Rounds"),
-//                        rs.getInt("BallroomNumber"));
-//            }
-//
-//            rs.close();
-//            ps.close();
-//            conn.close();
-//            System.out.println("Query done and connection closed.");
-//        }
-//        catch (ClassNotFoundException e) {
-//            System.out.println("MySQL Driver not found: " + e.getMessage());
-//        }
-//        catch (SQLException e) {
-//            System.out.println("SQLState=" + e.getSQLState() + " Code=" + e.getErrorCode());
-//            System.out.println("Message=" + e.getMessage());
-//        }
-//    }
-//}
