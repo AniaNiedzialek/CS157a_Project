@@ -27,7 +27,7 @@ public class Main {
             System.out.println("Connected to MySQL!");
 
             runMenu(conn);
-        }  catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             System.out.println("MySQL Driver not found: " + e.getMessage());
         } catch (SQLException e) {
             System.out.println("SQLState=" + e.getSQLState() +
@@ -42,7 +42,6 @@ public class Main {
             }
         }
     }
-
 
     private static void runMenu(Connection conn) {
         Scanner scanner = new Scanner(System.in);
@@ -96,99 +95,104 @@ public class Main {
 
         String c = scanner.nextLine();
 
-        switch (c){
-        case "1":
-            viewCompetitions(conn);
-            break;
-        case "2":
-            viewPersons(conn);
-            break;
-        case "3":
-            return;
-        default:
-            System.out.println("Wrong choice! Try again...");
-    }
-}
-
-private static void insertMenu(Connection conn, Scanner scanner) {
-    System.out.println("*** INSERT DATA *** ");
-    System.out.println("1.Insert Person");
-    System.out.println("2.Insert Event");
-    System.out.println("3.Back");
-
-    String c = scanner.nextLine();
-    switch (c) {
-        case "1":
-            insertPerson(conn, scanner);
-            break;
-        case "2":
-            insertEvent(conn, scanner);
-            break;
-        case "3":
-            return;
-        default:
-            System.out.println("Invalid option.");
-    }
-}
-
-private static void updateMenu(Connection conn, Scanner scanner) {
-    System.out.println("*** UPDATE DATA *** ");
-    System.out.println("1.Update Person");
-    System.out.println("2.Back");
-
-    String c = scanner.nextLine();
-
-    switch(c) {
-        case "1":
-            updatePersonAge(conn, scanner);
-            break;
-        case "2":
-            return;
-        default:
-            System.out.println("Invalid option.");
-    }
-}
-
-private static void deleteMenu(Connection conn, Scanner scanner) {
-    System.out.println("*** DELETE DATA *** ");
-    System.out.println("1. Delete Event");
-    System.out.println("2. Back");
-
-    String c = scanner.nextLine();
-    switch (c) {
-        case "1":
-            deleteEvent(conn, scanner);
-            break;
-        case "2":
-            return;
-        default:
-            System.out.println("Invalid option.");
-    }
-}
-
-//methods
-private static void viewCompetitions(Connection conn) {
-    System.out.println("\n*** VIEW COMPETITIONS *** ");
-    String sql = "SELECT CompetitionID, Rounds, BallroomNumber FROM Competition";
-    try(PreparedStatement ps = conn.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery()) {
-        System.out.println("ID | Rounds | Ballroom");
-        System.out.println("---------------------------");
-
-        while (rs.next()) {
-            System.out.printf("%2d | %6d | %8d%n",
-                    rs.getInt("CompetitionID"),
-                    rs.getInt("Rounds"),
-                    rs.getInt("BallroomNumber"));
+        switch (c) {
+            case "1":
+                viewCompetitions(conn, scanner);
+                break;
+            case "2":
+                viewPersons(conn, scanner);
+                break;
+            case "3":
+                return;
+            default:
+                System.out.println("Wrong choice! Try again...");
         }
-        System.out.println("-------------------------------------");
-    } catch (SQLException e) {
-        System.out.println("Error retrieving competitions." + e.getMessage());
     }
 
-}
 
-    private static void viewPersons(Connection conn) {
+    private static void insertMenu(Connection conn, Scanner scanner) {
+        System.out.println("*** INSERT DATA *** ");
+        System.out.println("1.Insert Person");
+        System.out.println("2.Insert Event");
+        System.out.println("3.Back");
+
+        String c = scanner.nextLine();
+        switch (c) {
+            case "1":
+                insertPerson(conn, scanner);
+                break;
+            case "2":
+                insertEvent(conn, scanner);
+                break;
+            case "3":
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    private static void updateMenu(Connection conn, Scanner scanner) {
+        System.out.println("*** UPDATE DATA *** ");
+        System.out.println("1.Update Person");
+        System.out.println("2.Back");
+
+        String c = scanner.nextLine();
+
+        switch(c) {
+            case "1":
+                updatePersonAge(conn, scanner);
+                break;
+            case "2":
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    private static void deleteMenu(Connection conn, Scanner scanner) {
+        System.out.println("*** DELETE DATA *** ");
+        System.out.println("1. Delete Event");
+        System.out.println("2. Back");
+
+        String c = scanner.nextLine();
+        switch (c) {
+            case "1":
+                deleteEvent(conn, scanner);
+                break;
+            case "2":
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    //methods
+    private static void viewCompetitions(Connection conn, Scanner scanner) {
+        System.out.println("\n*** VIEW COMPETITIONS *** ");
+        String sql = "SELECT CompetitionID, Rounds, BallroomNumber FROM Competition";
+        try(PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+            System.out.println("ID | Rounds | Ballroom");
+            System.out.println("---------------------------");
+
+            while (rs.next()) {
+                System.out.printf("%2d | %6d | %8d%n",
+                        rs.getInt("CompetitionID"),
+                        rs.getInt("Rounds"),
+                        rs.getInt("BallroomNumber"));
+            }
+            System.out.println("-------------------------------------");
+            System.out.println("Enter to return to Menu:");
+
+            scanner.nextLine(); //waits for any input
+
+        } catch (SQLException e) {
+            System.out.println("Error retrieving competitions." + e.getMessage());
+        }
+
+    }
+
+    private static void viewPersons(Connection conn, Scanner scanner) {
         System.out.println("\n*** VIEW PERSONS *** ");
         String sql = "SELECT PersonID, Name, Age FROM Person ORDER BY PersonID";
 
@@ -204,7 +208,11 @@ private static void viewCompetitions(Connection conn) {
                         rs.getString("Name"),
                         rs.getInt("Age"));
             }
-        System.out.println("-------------------------------------");
+            System.out.println("-------------------------------------");
+            System.out.println("Enter to return to Menu:");
+
+            scanner.nextLine(); //waits for any input
+
         } catch (SQLException e) {
             System.out.println("Error retrieving persons:");
             System.out.println(e.getMessage());
