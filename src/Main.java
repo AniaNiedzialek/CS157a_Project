@@ -90,8 +90,9 @@ public class Main {
         System.out.println("*** VIEW DATA *** ");
         System.out.println("1. View Competitions");
         System.out.println("2. View Persons");
-        System.out.println("3. Back");
-        System.out.println("4. Choose: ");
+        System.out.println("3. View Events");
+        System.out.println("4. Back");
+        System.out.println("5. Choose: ");
 
         String c = scanner.nextLine();
 
@@ -103,6 +104,9 @@ public class Main {
                 viewPersons(conn, scanner);
                 break;
             case "3":
+                viewEvents(conn, scanner);
+                break;
+            case "4":
                 return;
             default:
                 System.out.println("Wrong choice! Try again...");
@@ -167,6 +171,7 @@ public class Main {
     }
 
     //methods
+    //view methods
     private static void viewCompetitions(Connection conn, Scanner scanner) {
         System.out.println("\n*** VIEW COMPETITIONS *** ");
         String sql = "SELECT CompetitionID, Rounds, BallroomNumber FROM Competition";
@@ -220,6 +225,36 @@ public class Main {
 
     }
 
+    private static void viewEvents(Connection conn, Scanner scanner) {
+        System.out.println("\n*** VIEW EVENTS *** ");
+        String sql = "SELECT EventID, Date, Price, Address FROM Event ORDER BY EventID";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            System.out.println("ID | Date       | Price  | Address");
+            System.out.println("---------------------------------------");
+
+            while (rs.next()) {
+                System.out.printf("%2d | %-10s | %-6.2f | %-50s%n",
+                        rs.getInt("EventID"),
+                        rs.getDate("Date"),
+                        rs.getDouble("Price"),
+                        rs.getString("Address"));
+            }
+            System.out.println("-------------------------------------");
+            System.out.println("Enter to return to Menu:");
+
+            scanner.nextLine(); //waits for any input
+
+        } catch (SQLException e) {
+            System.out.println("Error retrieving persons:");
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+    //insert methods
     private static void insertPerson(Connection conn, Scanner scanner) {
         System.out.println("\n*** INSERT PERSON *** ");
 
@@ -334,6 +369,7 @@ public class Main {
         }
     }
 
+    //update methods
     private static void updatePersonAge(Connection conn, Scanner scanner) {
         System.out.println("\n*** UPDATE PERSON AGE *** ");
         try {
@@ -382,6 +418,7 @@ public class Main {
         }
     }
 
+    //delete methods
     private static void deleteEvent(Connection conn, Scanner scanner) {
         System.out.println("\n*** DELETE EVENTS *** ");
 
@@ -412,6 +449,7 @@ public class Main {
 
     }
 
+    //transaction method
     private static void transactionWorkflow(Connection conn, Scanner scanner) {
         System.out.println("\n(Transaction Workflow - will implement)");
     }
