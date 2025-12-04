@@ -58,5 +58,5 @@ The application includes:
 
 ## Notes
 - If connection fails, verify MySQL is running and the schema/tables exist.
-- Run **Option 6 → Option 1** on first use to set up the VIEW, Stored Procedure, and Constraints.
+- The VIEW, Stored Procedure, and Constraints are created automatically when running `create_and_populate.sql`.
 

@@ -310,3 +310,121 @@ WHERE jp.CompetitionID = 4
   AND jp.Round = 3
 GROUP BY jp.CompetitionID, jp.Round, p.Name
 ORDER BY AvgScore DESC;
+
+-- ============================================================================
+-- REGISTRATION TABLE
+-- Tracks dancer registrations for events
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS Registration (
+    RegistrationID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    PersonID INT UNSIGNED NOT NULL,
+    EventID INT UNSIGNED NOT NULL,
+    RegistrationDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Status VARCHAR(20) DEFAULT 'Confirmed',
+    FOREIGN KEY (PersonID) REFERENCES Person(PersonID),
+    FOREIGN KEY (EventID) REFERENCES Event(EventID),
+    UNIQUE KEY unique_registration (PersonID, EventID)
+);
+
+-- ============================================================================
+-- VIEW: EventLocationSummary
+-- Combines Event and Location data for convenient reporting
+-- Adds a computed PriceCategory column to classify events by price tier
+-- ============================================================================
+DROP VIEW IF EXISTS EventLocationSummary;
+
+CREATE VIEW EventLocationSummary AS
+SELECT 
+    e.EventID,
+    e.Date AS EventDate,
+    e.Price,
+    e.Address,
+    l.Capacity,
+    CASE 
+        WHEN e.Price < 50 THEN 'Budget'
+        WHEN e.Price BETWEEN 50 AND 100 THEN 'Standard'
+        ELSE 'Premium'
+    END AS PriceCategory
+FROM Event e
+LEFT JOIN Location l ON e.Address = l.Address;
+
+-- Test the VIEW:
+SELECT * FROM EventLocationSummary;
+
+-- ============================================================================
+-- STORED PROCEDURE: RegisterDancer
+-- Registers a dancer for an event with business rule enforcement:
+--   - Person must exist in the database
+--   - Event must exist in the database
+--   - Person must be at least 5 years old (minimum age for competition)
+--   - Cannot register the same person twice for the same event
+-- ============================================================================
+DROP PROCEDURE IF EXISTS RegisterDancer;
+
+DELIMITER //
+
+CREATE PROCEDURE RegisterDancer(
+    IN p_PersonID INT,
+    IN p_EventID INT,
+    OUT p_Result VARCHAR(100)
+)
+BEGIN
+    DECLARE v_PersonExists INT DEFAULT 0;
+    DECLARE v_EventExists INT DEFAULT 0;
+    DECLARE v_PersonAge INT DEFAULT 0;
+    DECLARE v_AlreadyRegistered INT DEFAULT 0;
+    
+    -- Check if person exists and get their age
+    SELECT COUNT(*), COALESCE(MAX(Age), 0) 
+    INTO v_PersonExists, v_PersonAge
+    FROM Person 
+    WHERE PersonID = p_PersonID;
+    
+    -- Check if event exists
+    SELECT COUNT(*) INTO v_EventExists
+    FROM Event 
+    WHERE EventID = p_EventID;
+    
+    -- Check if already registered
+    SELECT COUNT(*) INTO v_AlreadyRegistered
+    FROM Registration 
+    WHERE PersonID = p_PersonID AND EventID = p_EventID;
+    
+    -- Apply business rules
+    IF v_PersonExists = 0 THEN
+        SET p_Result = 'ERROR: Person does not exist';
+    ELSEIF v_EventExists = 0 THEN
+        SET p_Result = 'ERROR: Event does not exist';
+    ELSEIF v_PersonAge < 5 THEN
+        SET p_Result = 'ERROR: Dancer must be at least 5 years old';
+    ELSEIF v_AlreadyRegistered > 0 THEN
+        SET p_Result = 'ERROR: Person already registered for this event';
+    ELSE
+        INSERT INTO Registration (PersonID, EventID) 
+        VALUES (p_PersonID, p_EventID);
+        SET p_Result = 'SUCCESS: Dancer registered successfully!';
+    END IF;
+END //
+
+DELIMITER ;
+
+-- ============================================================================
+-- CHECK CONSTRAINTS
+-- Ensure data integrity at the database level
+-- ============================================================================
+
+-- Constraint: Person Age must be between 1 and 119
+ALTER TABLE Person ADD CONSTRAINT chk_person_age 
+    CHECK (Age > 0 AND Age < 120);
+
+-- Constraint: Event Price must be positive
+ALTER TABLE Event ADD CONSTRAINT chk_event_price 
+    CHECK (Price > 0);
+
+-- Constraint: Location Capacity must be positive
+ALTER TABLE Location ADD CONSTRAINT chk_location_capacity 
+    CHECK (Capacity > 0);
+
+-- Constraint: Competition Rounds must be positive
+ALTER TABLE Competition ADD CONSTRAINT chk_competition_rounds 
+    CHECK (Rounds > 0);
