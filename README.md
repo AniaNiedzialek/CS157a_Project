@@ -12,11 +12,10 @@ Simple Java console app that connects to a MySQL database using JDBC and Prepare
 CS157a_Project/
 ├── src/
 │   └── Main.java                 # Main application
-├── sql/
-│   └── schema.sql                # Database schema & sample data
+├── create_and_populate.sql       # Database schema & sample data
 ├── lib/
 │   └── mysql-connector-j-*.jar   # MySQL JDBC driver
-├── app.properties                # Your local DB credentials (not in git)
+├── app.properties                # DB credentials
 └── README.md
 ```
 
@@ -25,7 +24,7 @@ CS157a_Project/
 1. **Database**
     - Open MySQL Workbench and run the SQL script located at:
       ```
-      sql/schema.sql
+      create_and_populate.sql
       ```
     - This script will:
       - Create the `danceCompetition` database
@@ -33,20 +32,16 @@ CS157a_Project/
       - Insert sample data
       - Create a trigger for score validation
 
-2. **Local config**
-   This step is to ensure credential security when collaborating on coding part.
-    - Copy the sample file and edit it with your own MySQL user/password:
+2. **Database Credentials**
+    - The `app.properties` file contains the database connection settings:
       ```
-      cp app.properties.example app.properties
+      url=jdbc:mysql://localhost:3306/danceCompetition
+      user=root
+      password=admin
       ```
-    - `app.properties` should *not* be committed (see .gitignore).
-    - What to put in the file?
-url=jdbc:mysql://localhost:3306/danceCompetition
-user=root
-password= // your password to workbench!
-    - save the file and you should be able to run Main.java now!
+    - Update the password if your MySQL setup uses a different one.
 
-4. **Run**
+3. **Run**
     - Open the project in IntelliJ.
     - Ensure `lib/mysql-connector-j-*.jar` is **Add as Library…** (Project Library).
     - Open `src/Main.java` and click the green arrow next to `main`. You should be able to have a working connection!
@@ -62,7 +57,6 @@ The application includes:
   - **CHECK Constraints**: Validates Age, Price, Capacity, and Rounds are positive
 
 ## Notes
-- Keep credentials out of Git. Use `app.properties` locally (ignored by git).
 - If connection fails, verify MySQL is running and the schema/tables exist.
 - Run **Option 6 → Option 1** on first use to set up the VIEW, Stored Procedure, and Constraints.
 
