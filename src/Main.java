@@ -52,7 +52,7 @@ public class Main {
             System.out.println("2. Insert Data");
             System.out.println("3. Update Data");
             System.out.println("4. Delete Data");
-            System.out.println("5. Transaction Workflow");
+            System.out.println("5. Transaction (Insert Locations and Events)");
             System.out.println("6. Exit");
             System.out.println("*************************************************");
             System.out.println("Enter choice: ");
@@ -451,6 +451,98 @@ public class Main {
 
     //transaction method
     private static void transactionWorkflow(Connection conn, Scanner scanner) {
-        System.out.println("\n(Transaction Workflow - will implement)");
+
+        System.out.println("\n*** INSERT LOCATIONS AND EVENTS *** ");
+        try {
+
+            conn.setAutoCommit(false);
+
+            try {
+                //location
+                System.out.println("Enter Address: ");
+                String address = scanner.nextLine();
+                if (address.isEmpty()) {
+                    System.out.println("Address cannot be empty...");
+                    return;
+                }
+                System.out.println("Enter Capacity: ");
+                String capacityStr = scanner.nextLine();
+                int capacity;
+                try {
+                    capacity = Integer.parseInt(capacityStr);
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid ID - must be a number...");
+                    return;
+                }
+
+                //event
+                System.out.println("Enter Event ID: ");
+                String idStr = scanner.nextLine();
+                int eventID;
+                try {
+                    eventID = Integer.parseInt(idStr);
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid ID - must be a number...");
+                    return;
+                }
+                System.out.println("Enter Date (YYYY-MM-DD): ");
+                String date = scanner.nextLine().trim();
+                if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    System.out.println("Invalid date format.");
+                    return;
+                }
+
+                System.out.println("Enter Price (number): ");
+                String priceStr = scanner.nextLine();
+                double price;
+                try {
+                    price = Double.parseDouble(priceStr);
+                    if (price <= 0) {System.out.println("Price must be positive.");
+                        return;
+                    }
+
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid price format.");
+                    return ;
+                }
+                String locationSQL = "INSERT INTO Location (Address, Capacity) VALUES (?, ?)";
+                PreparedStatement locationPS = conn.prepareStatement(locationSQL);
+                locationPS.setString(1, address);
+                locationPS.setInt(2, capacity);
+
+                int locationRows = locationPS.executeUpdate();
+                if (locationRows > 0) { //succeeded location insert, continue to event insert
+                    String eventSQL = "INSERT INTO Event (EventID, Date, Price, Address) VALUES (?, ?, ?, ?)";
+                    PreparedStatement eventPS = conn.prepareStatement(eventSQL);
+                    eventPS.setInt(1, eventID);
+                    eventPS.setString(2, date);
+                    eventPS.setDouble(3, price);
+                    eventPS.setString(4, address);
+                    int eventRows = eventPS.executeUpdate();
+                    if (eventRows > 0) {
+                        System.out.println("Successfully inserted into location and event table.");
+
+                    } else { //rollback when event insert fails
+                        System.out.println("Failed to insert into event table.");
+                        conn.rollback();
+                    }
+                    eventPS.close();
+
+                } else { //rollback when location insert fails
+                    System.out.println("Failed to insert into event table.");
+                    conn.rollback();
+                }
+                locationPS.close();
+                conn.commit();
+            } catch (SQLException e) { //rollback when insert throws an exception
+                conn.rollback();
+                System.out.println("\nTransaction rolled back: " + e.getMessage());
+            }
+
+            conn.setAutoCommit(true);
+
+        } catch (SQLException e) { //for conn.AutoCommit and conn.rollback
+            System.out.println("\nERROR running transaction: " + e.getMessage());
+        }
     }
 }
