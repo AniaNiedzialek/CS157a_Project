@@ -265,7 +265,7 @@ WHERE e.Price = (
 )
 ORDER BY p.Name;
 
---TRIGGER
+-- TRIGGER
 DELIMITER //
 DROP TRIGGER IF EXISTS new_trig//
 CREATE TRIGGER new_trig
