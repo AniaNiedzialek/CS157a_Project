@@ -1,1 +1,7 @@
-Aldo Perez - I added the view (EventLocationSummary) and the procedure (ValidateDancerForEvent) which validates a dancer. I also added several constraints and checks to validate the data inserted to our tables. For our procedure, instead of running 4 seprate queries it automates the entire validation into one call.
+Aldo Perez - I added the view (EventLocationSummary) and the procedure (ValidateDancerForEvent) which validates a dancer. I also added several constraints and checks to validate the data inserted to our tables. For our procedure, instead of running 4 separate queries it automates the entire validation into one call.
+Ania Niedzialek - prepared the JDBC setup and Connection Test. Build initial text-based console Menu with the Scanner I/O. Implemented initial insert, update, delete for three tables as well as PreparedStatements. Added input validation and error handling using SQLException errors. Worked on the AI log summary.
+Chase Potter - Implemented the transaction that does a multi-table insert with rollback on failure. Added quality of life features to the app such as waiting for user input after displaying a table, before displaying the main menu. Tested the app to ensure all features worked correctly. Worked on the AI log summary.
+Anthony Robinson - Recorded the full demo video for the Dance Competition Database Console Application.
+
+Reflection on teamwork:
+Each team member contributes in their own way, whether through technical skills, problem solving or organization. Working on a time allowed us to combine different strengths, ideas, and perspectives. Everyone finished their assigned tasks within the deadlines.
