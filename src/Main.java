@@ -189,10 +189,9 @@ public class Main {
                         rs.getInt("Rounds"),
                         rs.getInt("BallroomNumber"));
             }
-            System.out.println("-------------------------------------");
-            System.out.println("Enter to return to Menu:");
-
-            scanner.nextLine(); //waits for any input
+            System.out.println("---------------------------");
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
 
         } catch (SQLException e) {
             System.out.println("Error retrieving competitions." + e.getMessage());
@@ -208,7 +207,7 @@ public class Main {
              ResultSet rs = ps.executeQuery()) {
 
             System.out.println("ID | Name                 | Age");
-            System.out.println("---------------------------------------");
+            System.out.println("-------------------------------------");
 
             while (rs.next()) {
                 System.out.printf("%2d | %-20s | %3d%n",
@@ -217,9 +216,8 @@ public class Main {
                         rs.getInt("Age"));
             }
             System.out.println("-------------------------------------");
-            System.out.println("Enter to return to Menu:");
-
-            scanner.nextLine(); //waits for any input
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
 
         } catch (SQLException e) {
             System.out.println("Error retrieving persons:");
@@ -236,7 +234,7 @@ public class Main {
              ResultSet rs = ps.executeQuery()) {
 
             System.out.println("ID | Date       | Price  | Address");
-            System.out.println("---------------------------------------");
+            System.out.println("--------------------------------------------------------------------------");
 
             while (rs.next()) {
                 System.out.printf("%2d | %-10s | %-6.2f | %-50s%n",
@@ -245,10 +243,9 @@ public class Main {
                         rs.getDouble("Price"),
                         rs.getString("Address"));
             }
-            System.out.println("-------------------------------------");
-            System.out.println("Enter to return to Menu:");
-
-            scanner.nextLine(); //waits for any input
+            System.out.println("--------------------------------------------------------------------------");
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
 
         } catch (SQLException e) {
             System.out.println("Error retrieving persons:");
@@ -587,8 +584,8 @@ public class Main {
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
-            System.out.println("EventID | Date       | Price   | Address                    | Capacity | Category");
-            System.out.println("--------------------------------------------------------------------------------------");
+            System.out.println("EventID | Date       | Price   | Address                                            | Capacity | Category");
+            System.out.println("----------------------------------------------------------------------------------------------------------");
             
             boolean hasData = false;
             while (rs.next()) {
@@ -596,7 +593,7 @@ public class Main {
                 int capacity = rs.getInt("Capacity");
                 String capacityStr = rs.wasNull() ? "N/A" : String.valueOf(capacity);
                 
-                System.out.printf("%7d | %-10s | $%6.2f | %-26s | %8s | %s%n",
+                System.out.printf("%7d | %-10s | $%6.2f | %-50s | %8s | %s%n",
                         rs.getInt("EventID"),
                         rs.getDate("EventDate"),
                         rs.getDouble("Price"),
@@ -609,7 +606,7 @@ public class Main {
                 System.out.println("No events found. Add some events first!");
             }
             
-            System.out.println("--------------------------------------------------------------------------------------");
+            System.out.println("----------------------------------------------------------------------------------------------------------");
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
             

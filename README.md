@@ -56,6 +56,17 @@ The application includes:
   - **Stored Procedure**: `ValidateDancerForEvent` - validates dancer eligibility with business rules (enforces a rule/automates validation)
   - **CHECK Constraints**: Validates Age, Price, Capacity, and Rounds are positive
 
+## How we Built Our Application
+1. **Initial Framework**: 
+   - Set up database connection and a simple console menu with basic database operations
+   - Tested this initial framework was a fully working and clean foundation for our project
+2. **Added Features**: 
+   - Implemented a transaction and other database features
+   - Fixed any issues
+3. **Final Organization**:
+   - Made sure the console display always appeared clean and consistent for different features
+   - Caught and fixed final issues
+
 ## Notes
 - If connection fails, verify MySQL is running and the schema/tables exist.
 - The VIEW, Stored Procedure, and Constraints are created automatically when running `create_and_populate.sql`.

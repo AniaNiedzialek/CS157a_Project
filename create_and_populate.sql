@@ -1,3 +1,10 @@
+-- ============================================================================
+-- DATABASE SET UP
+-- Create Database
+-- Create Tables
+-- Insert Sample Data
+-- ============================================================================
+
 DROP DATABASE IF EXISTS danceCompetition;
 CREATE DATABASE danceCompetition;
 USE danceCompetition;
@@ -221,97 +228,6 @@ VALUES
 (5, 5, 2, 2, 7, 9.3),
 (5, 5, 3, 3, 8, 9.4);
 
--- 1 join for 2 tables: Competition, Event
-SELECT c.CompetitionID,
-       c.Rounds,
-       c.BallroomNumber,
-       e.Date,
-       e.Price,
-       e.Address
-FROM Competition AS c
-         JOIN Event AS e
-              ON e.EventID = c.EventID
-ORDER BY c.CompetitionID;
--- 1 join for 3 tables: CompetesIn, Person, Competition
-SELECT p.Name AS DancerInfo,
-       ci.CompetitionID,
-       ci.Ranking
-FROM CompetesIn as ci
-         JOIN Person AS p
-              ON p.PersonID = ci.DancerID
-         JOIN Competition AS c ON c.CompetitionID = ci.CompetitionID
-ORDER BY ci.CompetitionID, ci.Ranking, p.Name;
-
--- Event update with WHERE clause
-UPDATE Event
-SET Price = ROUND(Price*1.10, 2)
-WHERE Address LIKE '%Las Vegas%';
-SELECT EventID, Price, Address
-FROM Event
-WHERE Address LIKE '%Las Vegas%';
-
--- SUBQUERY with at least two tables
-SELECT p.Name AS DancerInfo
-FROM Person AS p
-         JOIN CompetesIn ci
-              ON p.PersonID = ci.DancerID
-         JOIN Competition c
-              ON c.CompetitionID = ci.CompetitionID
-         JOIN Event e
-              ON e.EventID = c.EventID
-WHERE e.Price = (
-    SELECT MIN(Price)
-    FROM Event
-)
-ORDER BY p.Name;
-
--- TRIGGER
-DELIMITER //
-DROP TRIGGER IF EXISTS new_trig//
-CREATE TRIGGER new_trig
-    BEFORE INSERT ON JudgesPerformance
-    FOR EACH ROW
-BEGIN
-    IF NEW.Score IS NULL THEN
-SET NEW.Score = 0.0;
-ELSEIF NEW.Score < 0.0 THEN
-SET NEW.Score = 0.0;
-ELSEIF NEW.Score > 10.0 THEN
-SET NEW.Score = 10.0;
-END IF;
-END//
-DELIMITER ;
-
--- DML:
-INSERT INTO JudgesPerformance
-(CompetitionID, DancerID, Round, SongID, JudgeID, Score)
-Values
-    (1,1,1,1,8,15.0);
-SELECT CompetitionID, DancerID, Round, SongID, JudgeID, Score
-FROM JudgesPerformance
-WHERE CompetitionID=1 AND DancerID=1 AND Round=1 AND SongID=1 AND JudgeID=8;
--- expected result score over 10.0 will be reduced to 10.0
--- Score below the minimum
-INSERT INTO JudgesPerformance
-(CompetitionID, DancerID, Round, SongID, JudgeID, Score)
-VALUES
-    (1, 1, 3, 3, 8, -5.0);
-SELECT CompetitionID, DancerID, Round, SongID, JudgeID, Score
-FROM JudgesPerformance
-WHERE CompetitionID=1 AND DancerID=1 AND Round=3 AND SongID=3 AND JudgeID=8;
-
--- Result - score should be saved as 0.0
-CREATE Index new_index
-    ON JudgesPerformance (CompetitionID, Round);
-SELECT jp.CompetitionID, jp.Round, p.Name AS DanceInfo, AVG(jp.Score) AS AvgScore
-FROM JudgesPerformance jp
-         JOIN Person p
-              ON p.PersonID = jp.DancerID
-WHERE jp.CompetitionID = 4
-  AND jp.Round = 3
-GROUP BY jp.CompetitionID, jp.Round, p.Name
-ORDER BY AvgScore DESC;
-
 -- ============================================================================
 -- VIEW: EventLocationSummary
 -- Combines Event and Location data for convenient reporting
@@ -333,9 +249,6 @@ SELECT
     END AS PriceCategory
 FROM Event e
 LEFT JOIN Location l ON e.Address = l.Address;
-
--- Test the VIEW:
-SELECT * FROM EventLocationSummary;
 
 -- ============================================================================
 -- STORED PROCEDURE: ValidateDancerForEvent
