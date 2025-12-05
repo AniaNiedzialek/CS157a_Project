@@ -282,7 +282,7 @@ END IF;
 END//
 DELIMITER ;
 
---DML:
+-- DML:
 INSERT INTO JudgesPerformance
 (CompetitionID, DancerID, Round, SongID, JudgeID, Score)
 Values
@@ -290,8 +290,8 @@ Values
 SELECT CompetitionID, DancerID, Round, SongID, JudgeID, Score
 FROM JudgesPerformance
 WHERE CompetitionID=1 AND DancerID=1 AND Round=1 AND SongID=1 AND JudgeID=8;
---expected result score over 10.0 will be reduced to 10.0
---Score below the minimum
+-- expected result score over 10.0 will be reduced to 10.0
+-- Score below the minimum
 INSERT INTO JudgesPerformance
 (CompetitionID, DancerID, Round, SongID, JudgeID, Score)
 VALUES
@@ -300,7 +300,7 @@ SELECT CompetitionID, DancerID, Round, SongID, JudgeID, Score
 FROM JudgesPerformance
 WHERE CompetitionID=1 AND DancerID=1 AND Round=3 AND SongID=3 AND JudgeID=8;
 
---Result - score should be saved as 0.0
+-- Result - score should be saved as 0.0
 CREATE Index new_index
     ON JudgesPerformance (CompetitionID, Round);
 SELECT jp.CompetitionID, jp.Round, p.Name AS DanceInfo, AVG(jp.Score) AS AvgScore
