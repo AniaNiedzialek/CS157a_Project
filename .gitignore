@@ -2,6 +2,3 @@
 .idea/
 *.iml
 out/
-
-# Local secrets
-app.properties

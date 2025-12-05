@@ -1,0 +1,1 @@
+Aldo Perez - I added the view (EventLocationSummary) and the procedure (ValidateDancerForEvent) which validates a dancer. I also added several constraints and checks to validate the data inserted to our tables. For our procedure, instead of running 4 seprate queries it automates the entire validation into one call.

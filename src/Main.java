@@ -3,7 +3,6 @@ import java.util.Properties;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Scanner;
-import java.util.Properties;
 
 
 public class Main {
@@ -53,7 +52,8 @@ public class Main {
             System.out.println("3. Update Data");
             System.out.println("4. Delete Data");
             System.out.println("5. Transaction (Insert Locations and Events)");
-            System.out.println("6. Exit");
+            System.out.println("6. Database Features (View, Stored Procedure, Constraints)");
+            System.out.println("7. Exit");
             System.out.println("*************************************************");
             System.out.println("Enter choice: ");
 
@@ -76,6 +76,9 @@ public class Main {
                     transactionWorkflow(conn, scanner);
                     break;
                 case "6":
+                    databaseFeaturesMenu(conn, scanner);
+                    break;
+                case "7":
                     System.out.println("Exiting... Bye!");
                     return;
                 default:
@@ -545,4 +548,243 @@ public class Main {
             System.out.println("\nERROR running transaction: " + e.getMessage());
         }
     }
+
+    // ==================== DATABASE FEATURES MENU ====================
+    private static void databaseFeaturesMenu(Connection conn, Scanner scanner) {
+        System.out.println("\n*** DATABASE FEATURES ***");
+        System.out.println("1. View Event-Location Summary (VIEW Demo)");
+        System.out.println("2. Validate Dancer for Event (Stored Procedure Demo)");
+        System.out.println("3. Test Constraints (Constraint Demo)");
+        System.out.println("4. Back");
+        System.out.println("Choose: ");
+
+        String c = scanner.nextLine();
+
+        switch (c) {
+            case "1":
+                viewEventLocationSummary(conn, scanner);
+                break;
+            case "2":
+                callValidateDancerProcedure(conn, scanner);
+                break;
+            case "3":
+                testConstraints(conn, scanner);
+                break;
+            case "4":
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    // Demo: Query the VIEW
+    private static void viewEventLocationSummary(Connection conn, Scanner scanner) {
+        System.out.println("\n*** EVENT-LOCATION SUMMARY (VIEW Demo) ***");
+        System.out.println("This data comes from the 'EventLocationSummary' VIEW\n");
+        
+        String sql = "SELECT * FROM EventLocationSummary ORDER BY EventID";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            System.out.println("EventID | Date       | Price   | Address                    | Capacity | Category");
+            System.out.println("--------------------------------------------------------------------------------------");
+            
+            boolean hasData = false;
+            while (rs.next()) {
+                hasData = true;
+                int capacity = rs.getInt("Capacity");
+                String capacityStr = rs.wasNull() ? "N/A" : String.valueOf(capacity);
+                
+                System.out.printf("%7d | %-10s | $%6.2f | %-26s | %8s | %s%n",
+                        rs.getInt("EventID"),
+                        rs.getDate("EventDate"),
+                        rs.getDouble("Price"),
+                        rs.getString("Address"),
+                        capacityStr,
+                        rs.getString("PriceCategory"));
+            }
+            
+            if (!hasData) {
+                System.out.println("No events found. Add some events first!");
+            }
+            
+            System.out.println("--------------------------------------------------------------------------------------");
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+            
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            System.out.println("Make sure the database was set up with create_and_populate.sql");
+        }
+    }
+
+    // Demo: Call the STORED PROCEDURE
+    private static void callValidateDancerProcedure(Connection conn, Scanner scanner) {
+        System.out.println("\n*** VALIDATE DANCER FOR EVENT (Stored Procedure Demo) ***");
+        System.out.println("This uses the 'ValidateDancerForEvent' stored procedure\n");
+        
+        try {
+            // Show available persons
+            System.out.println("Available Persons:");
+            String personSQL = "SELECT p.PersonID, p.Name, p.Age, " +
+                    "CASE WHEN d.PersonID IS NOT NULL THEN 'Yes' ELSE 'No' END AS IsDancer " +
+                    "FROM Person p LEFT JOIN Dancer d ON p.PersonID = d.PersonID ORDER BY p.PersonID";
+            try (PreparedStatement ps = conn.prepareStatement(personSQL);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.printf("  ID: %d - %s (Age: %d, Dancer: %s)%n",
+                            rs.getInt("PersonID"),
+                            rs.getString("Name"),
+                            rs.getInt("Age"),
+                            rs.getString("IsDancer"));
+                }
+            }
+            
+            // Show available events
+            System.out.println("\nAvailable Events:");
+            String eventSQL = "SELECT EventID, Date, Address FROM Event ORDER BY EventID";
+            try (PreparedStatement ps = conn.prepareStatement(eventSQL);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    System.out.printf("  ID: %d - %s at %s%n",
+                            rs.getInt("EventID"),
+                            rs.getDate("Date"),
+                            rs.getString("Address"));
+                }
+            }
+            
+            System.out.println("\nEnter Person ID to validate: ");
+            int personID;
+            try {
+                personID = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid ID format.");
+                return;
+            }
+            
+            System.out.println("Enter Event ID to check eligibility for: ");
+            int eventID;
+            try {
+                eventID = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid ID format.");
+                return;
+            }
+            
+            // Call the stored procedure
+            String callSQL = "{CALL ValidateDancerForEvent(?, ?, ?)}";
+            try (CallableStatement cs = conn.prepareCall(callSQL)) {
+                cs.setInt(1, personID);
+                cs.setInt(2, eventID);
+                cs.registerOutParameter(3, java.sql.Types.VARCHAR);
+                
+                cs.execute();
+                
+                String result = cs.getString(3);
+                System.out.println("\n*** PROCEDURE RESULT: " + result + " ***");
+            }
+            
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+            System.out.println("Make sure the database was set up with create_and_populate.sql");
+        }
+    }
+
+    // Demo: Test CHECK CONSTRAINTS
+    private static void testConstraints(Connection conn, Scanner scanner) {
+        System.out.println("\n*** TEST CONSTRAINTS Demo ***");
+        System.out.println("This demonstrates that CHECK constraints prevent invalid data.\n");
+        
+        System.out.println("Choose a constraint test:");
+        System.out.println("1. Try to insert Person with invalid age (negative or zero)");
+        System.out.println("2. Try to insert Event with invalid price (negative or zero)");
+        System.out.println("3. Try to insert Person with age > 119 (too old)");
+        System.out.println("4. Back");
+        
+        String choice = scanner.nextLine();
+        
+        switch (choice) {
+            case "1":
+                testInvalidAge(conn, scanner);
+                break;
+            case "2":
+                testInvalidPrice(conn, scanner);
+                break;
+            case "3":
+                testTooOldAge(conn, scanner);
+                break;
+            case "4":
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+    
+    private static void testInvalidAge(Connection conn, Scanner scanner) {
+        System.out.println("\n*** Testing: Insert Person with Age = -5 ***");
+        System.out.println("This should FAIL due to CHECK constraint (Age > 0)\n");
+        
+        String sql = "INSERT INTO Person (PersonID, Name, Age) VALUES (9999, 'Test Invalid Age', -5)";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+            System.out.println("ERROR: Insert succeeded! Constraint may not be active.");
+            
+            // Clean up
+            conn.createStatement().execute("DELETE FROM Person WHERE PersonID = 9999");
+        } catch (SQLException e) {
+            System.out.println("SUCCESS! Constraint working correctly!");
+            System.out.println("The database rejected the invalid data:");
+            System.out.println("  -> " + e.getMessage());
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+    
+    private static void testInvalidPrice(Connection conn, Scanner scanner) {
+        System.out.println("\n*** Testing: Insert Event with Price = -100 ***");
+        System.out.println("This should FAIL due to CHECK constraint (Price > 0)\n");
+        
+        String sql = "INSERT INTO Event (EventID, Date, Price, Address) VALUES (9999, '2025-01-01', -100, 'Test Address')";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+            System.out.println("ERROR: Insert succeeded! Constraint may not be active.");
+            
+            // Clean up
+            conn.createStatement().execute("DELETE FROM Event WHERE EventID = 9999");
+        } catch (SQLException e) {
+            System.out.println("SUCCESS! Constraint working correctly!");
+            System.out.println("The database rejected the invalid data:");
+            System.out.println("  -> " + e.getMessage());
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+    
+    private static void testTooOldAge(Connection conn, Scanner scanner) {
+        System.out.println("\n*** Testing: Insert Person with Age = 150 ***");
+        System.out.println("This should FAIL due to CHECK constraint (Age < 120)\n");
+        
+        String sql = "INSERT INTO Person (PersonID, Name, Age) VALUES (9998, 'Test Too Old', 150)";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+            System.out.println("ERROR: Insert succeeded! Constraint may not be active.");
+            
+            // Clean up
+            conn.createStatement().execute("DELETE FROM Person WHERE PersonID = 9998");
+        } catch (SQLException e) {
+            System.out.println("SUCCESS! Constraint working correctly!");
+            System.out.println("The database rejected the invalid data:");
+            System.out.println("  -> " + e.getMessage());
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
 }
