@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS danceCompetition;
 CREATE DATABASE danceCompetition;
 USE danceCompetition;
 DROP TABLE IF EXISTS Person, Dancer, Judge, Location, Event, Competition, Song,
@@ -312,21 +313,6 @@ GROUP BY jp.CompetitionID, jp.Round, p.Name
 ORDER BY AvgScore DESC;
 
 -- ============================================================================
--- REGISTRATION TABLE
--- Tracks dancer registrations for events
--- ============================================================================
-CREATE TABLE IF NOT EXISTS Registration (
-    RegistrationID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    PersonID INT UNSIGNED NOT NULL,
-    EventID INT UNSIGNED NOT NULL,
-    RegistrationDate DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Status VARCHAR(20) DEFAULT 'Confirmed',
-    FOREIGN KEY (PersonID) REFERENCES Person(PersonID),
-    FOREIGN KEY (EventID) REFERENCES Event(EventID),
-    UNIQUE KEY unique_registration (PersonID, EventID)
-);
-
--- ============================================================================
 -- VIEW: EventLocationSummary
 -- Combines Event and Location data for convenient reporting
 -- Adds a computed PriceCategory column to classify events by price tier
@@ -352,18 +338,19 @@ LEFT JOIN Location l ON e.Address = l.Address;
 SELECT * FROM EventLocationSummary;
 
 -- ============================================================================
--- STORED PROCEDURE: RegisterDancer
--- Registers a dancer for an event with business rule enforcement:
+-- STORED PROCEDURE: ValidateDancerForEvent
+-- Validates if a dancer is eligible to participate in an event
+-- Business rules enforced:
 --   - Person must exist in the database
 --   - Event must exist in the database
 --   - Person must be at least 5 years old (minimum age for competition)
---   - Cannot register the same person twice for the same event
+--   - Person must be a registered Dancer (exists in Dancer table)
 -- ============================================================================
-DROP PROCEDURE IF EXISTS RegisterDancer;
+DROP PROCEDURE IF EXISTS ValidateDancerForEvent;
 
 DELIMITER //
 
-CREATE PROCEDURE RegisterDancer(
+CREATE PROCEDURE ValidateDancerForEvent(
     IN p_PersonID INT,
     IN p_EventID INT,
     OUT p_Result VARCHAR(100)
@@ -372,11 +359,13 @@ BEGIN
     DECLARE v_PersonExists INT DEFAULT 0;
     DECLARE v_EventExists INT DEFAULT 0;
     DECLARE v_PersonAge INT DEFAULT 0;
-    DECLARE v_AlreadyRegistered INT DEFAULT 0;
+    DECLARE v_IsDancer INT DEFAULT 0;
+    DECLARE v_PersonName VARCHAR(30) DEFAULT '';
+    DECLARE v_DancerLevel VARCHAR(30) DEFAULT '';
     
-    -- Check if person exists and get their age
-    SELECT COUNT(*), COALESCE(MAX(Age), 0) 
-    INTO v_PersonExists, v_PersonAge
+    -- Check if person exists and get their age and name
+    SELECT COUNT(*), COALESCE(MAX(Age), 0), COALESCE(MAX(Name), '')
+    INTO v_PersonExists, v_PersonAge, v_PersonName
     FROM Person 
     WHERE PersonID = p_PersonID;
     
@@ -385,10 +374,11 @@ BEGIN
     FROM Event 
     WHERE EventID = p_EventID;
     
-    -- Check if already registered
-    SELECT COUNT(*) INTO v_AlreadyRegistered
-    FROM Registration 
-    WHERE PersonID = p_PersonID AND EventID = p_EventID;
+    -- Check if person is a dancer
+    SELECT COUNT(*), COALESCE(MAX(Level), '')
+    INTO v_IsDancer, v_DancerLevel
+    FROM Dancer 
+    WHERE PersonID = p_PersonID;
     
     -- Apply business rules
     IF v_PersonExists = 0 THEN
@@ -396,13 +386,11 @@ BEGIN
     ELSEIF v_EventExists = 0 THEN
         SET p_Result = 'ERROR: Event does not exist';
     ELSEIF v_PersonAge < 5 THEN
-        SET p_Result = 'ERROR: Dancer must be at least 5 years old';
-    ELSEIF v_AlreadyRegistered > 0 THEN
-        SET p_Result = 'ERROR: Person already registered for this event';
+        SET p_Result = 'ERROR: Person must be at least 5 years old to compete';
+    ELSEIF v_IsDancer = 0 THEN
+        SET p_Result = 'ERROR: Person is not registered as a Dancer';
     ELSE
-        INSERT INTO Registration (PersonID, EventID) 
-        VALUES (p_PersonID, p_EventID);
-        SET p_Result = 'SUCCESS: Dancer registered successfully!';
+        SET p_Result = CONCAT('ELIGIBLE: ', v_PersonName, ' (', v_DancerLevel, ') can participate!');
     END IF;
 END //
 

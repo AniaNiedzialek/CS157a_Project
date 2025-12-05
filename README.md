@@ -53,7 +53,7 @@ The application includes:
 - **Transactions**: Insert Location and Event atomically
 - **Database Features** (Option 6):
   - **VIEW**: `EventLocationSummary` - combines Event and Location data for reporting
-  - **Stored Procedure**: `RegisterDancer` - registers dancers with business rule validation
+  - **Stored Procedure**: `ValidateDancerForEvent` - validates dancer eligibility with business rules (enforces a rule/automates validation)
   - **CHECK Constraints**: Validates Age, Price, Capacity, and Rounds are positive
 
 ## Notes

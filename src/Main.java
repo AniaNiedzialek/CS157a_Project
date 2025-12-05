@@ -553,10 +553,9 @@ public class Main {
     private static void databaseFeaturesMenu(Connection conn, Scanner scanner) {
         System.out.println("\n*** DATABASE FEATURES ***");
         System.out.println("1. View Event-Location Summary (VIEW Demo)");
-        System.out.println("2. Register Dancer for Event (Stored Procedure Demo)");
+        System.out.println("2. Validate Dancer for Event (Stored Procedure Demo)");
         System.out.println("3. Test Constraints (Constraint Demo)");
-        System.out.println("4. View Registered Dancers");
-        System.out.println("5. Back");
+        System.out.println("4. Back");
         System.out.println("Choose: ");
 
         String c = scanner.nextLine();
@@ -566,15 +565,12 @@ public class Main {
                 viewEventLocationSummary(conn, scanner);
                 break;
             case "2":
-                callRegisterDancerProcedure(conn, scanner);
+                callValidateDancerProcedure(conn, scanner);
                 break;
             case "3":
                 testConstraints(conn, scanner);
                 break;
             case "4":
-                viewRegisteredDancers(conn, scanner);
-                break;
-            case "5":
                 return;
             default:
                 System.out.println("Invalid option.");
@@ -619,26 +615,29 @@ public class Main {
             
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-            System.out.println("Make sure to run 'Setup Database Features' first (Option 1)");
+            System.out.println("Make sure the database was set up with create_and_populate.sql");
         }
     }
 
     // Demo: Call the STORED PROCEDURE
-    private static void callRegisterDancerProcedure(Connection conn, Scanner scanner) {
-        System.out.println("\n*** REGISTER DANCER (Stored Procedure Demo) ***");
-        System.out.println("This uses the 'RegisterDancer' stored procedure\n");
+    private static void callValidateDancerProcedure(Connection conn, Scanner scanner) {
+        System.out.println("\n*** VALIDATE DANCER FOR EVENT (Stored Procedure Demo) ***");
+        System.out.println("This uses the 'ValidateDancerForEvent' stored procedure\n");
         
         try {
             // Show available persons
             System.out.println("Available Persons:");
-            String personSQL = "SELECT PersonID, Name, Age FROM Person ORDER BY PersonID";
+            String personSQL = "SELECT p.PersonID, p.Name, p.Age, " +
+                    "CASE WHEN d.PersonID IS NOT NULL THEN 'Yes' ELSE 'No' END AS IsDancer " +
+                    "FROM Person p LEFT JOIN Dancer d ON p.PersonID = d.PersonID ORDER BY p.PersonID";
             try (PreparedStatement ps = conn.prepareStatement(personSQL);
                  ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    System.out.printf("  ID: %d - %s (Age: %d)%n",
+                    System.out.printf("  ID: %d - %s (Age: %d, Dancer: %s)%n",
                             rs.getInt("PersonID"),
                             rs.getString("Name"),
-                            rs.getInt("Age"));
+                            rs.getInt("Age"),
+                            rs.getString("IsDancer"));
                 }
             }
             
@@ -655,7 +654,7 @@ public class Main {
                 }
             }
             
-            System.out.println("\nEnter Person ID to register: ");
+            System.out.println("\nEnter Person ID to validate: ");
             int personID;
             try {
                 personID = Integer.parseInt(scanner.nextLine());
@@ -664,7 +663,7 @@ public class Main {
                 return;
             }
             
-            System.out.println("Enter Event ID to register for: ");
+            System.out.println("Enter Event ID to check eligibility for: ");
             int eventID;
             try {
                 eventID = Integer.parseInt(scanner.nextLine());
@@ -674,7 +673,7 @@ public class Main {
             }
             
             // Call the stored procedure
-            String callSQL = "{CALL RegisterDancer(?, ?, ?)}";
+            String callSQL = "{CALL ValidateDancerForEvent(?, ?, ?)}";
             try (CallableStatement cs = conn.prepareCall(callSQL)) {
                 cs.setInt(1, personID);
                 cs.setInt(2, eventID);
@@ -688,7 +687,7 @@ public class Main {
             
         } catch (SQLException e) {
             System.out.println("Error: " + e.getMessage());
-            System.out.println("Make sure to run 'Setup Database Features' first (Option 1)");
+            System.out.println("Make sure the database was set up with create_and_populate.sql");
         }
     }
 
@@ -788,46 +787,4 @@ public class Main {
         scanner.nextLine();
     }
 
-    // View registered dancers
-    private static void viewRegisteredDancers(Connection conn, Scanner scanner) {
-        System.out.println("\n*** REGISTERED DANCERS ***");
-        
-        String sql = "SELECT r.RegistrationID, p.Name, e.Date AS EventDate, e.Address, r.RegistrationDate, r.Status " +
-                     "FROM Registration r " +
-                     "JOIN Person p ON r.PersonID = p.PersonID " +
-                     "JOIN Event e ON r.EventID = e.EventID " +
-                     "ORDER BY r.RegistrationDate DESC";
-        
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            System.out.println("RegID | Dancer Name          | Event Date | Location               | Registered On       | Status");
-            System.out.println("----------------------------------------------------------------------------------------------------");
-            
-            boolean hasData = false;
-            while (rs.next()) {
-                hasData = true;
-                System.out.printf("%5d | %-20s | %-10s | %-22s | %-19s | %s%n",
-                        rs.getInt("RegistrationID"),
-                        rs.getString("Name"),
-                        rs.getDate("EventDate"),
-                        rs.getString("Address"),
-                        rs.getTimestamp("RegistrationDate"),
-                        rs.getString("Status"));
-            }
-            
-            if (!hasData) {
-                System.out.println("No registrations yet. Use option 3 to register dancers!");
-            }
-            
-            System.out.println("----------------------------------------------------------------------------------------------------");
-            
-        } catch (SQLException e) {
-            System.out.println("Error: " + e.getMessage());
-            System.out.println("Make sure to run 'Setup Database Features' first (Option 1)");
-        }
-        
-        System.out.println("\nPress Enter to continue...");
-        scanner.nextLine();
-    }
 }
